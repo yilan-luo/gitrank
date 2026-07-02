@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """Main menu screen with Search, Settings, and Quit options."""
 
 from textual.app import ComposeResult

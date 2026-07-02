@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """Shared constants for TUI screens.
 
 Centralises option lists used by both the search wizard and settings

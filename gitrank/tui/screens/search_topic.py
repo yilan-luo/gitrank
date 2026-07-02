@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """Search topic selection screen — Step 1 of the search wizard."""
 
 from textual.app import ComposeResult

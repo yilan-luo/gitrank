@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """Settings screen with sub-pickers for Topic, Time Window, and Sort Method."""
 
 from textual.app import ComposeResult

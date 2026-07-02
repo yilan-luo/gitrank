@@ -1,4 +1,19 @@
 {
+  "permissions": {
+    "allow": [
+      "PowerShell(openspec new *)",
+      "Bash(pip list *)",
+      "Bash(where sqlite3.dll)",
+      "Read(//d/Miniconda/DLLs/**)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "PowerShell(py *)",
+      "Bash(python -m pytest tests/ -v --tb=short)",
+      "Bash(where python *)",
+      "Bash(python -c ' *)",
+      "Bash(python *)"
+    ]
+  },
   "hooks": {
     "PreToolUse": [
       {
@@ -10,11 +25,6 @@
           }
         ]
       }
-    ]
-  },
-  "permissions": {
-    "allow": [
-      "PowerShell(openspec new *)"
     ]
   }
 }

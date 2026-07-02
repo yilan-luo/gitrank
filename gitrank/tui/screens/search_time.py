@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """Time window selection screen — Step 2 of the search wizard."""
 
 from textual.app import ComposeResult

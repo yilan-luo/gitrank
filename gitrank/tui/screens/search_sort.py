@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """Sort method selection screen — Step 3 of the search wizard."""
 
 from textual.app import ComposeResult
