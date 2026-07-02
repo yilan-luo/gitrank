@@ -1,0 +1,18 @@
+{
+  "change": "github-rank-tui",
+  "phase": "design",
+  "mode": "compact",
+  "canonical_spec": "openspec",
+  "generated_by": "comet-handoff.sh",
+  "context_hash": "bf50be1938946d9cf4186057f1e4513978af50f2ceed8b71a4ddd90a67a030f9",
+  "files": [
+    { "path": "openspec/changes/github-rank-tui/proposal.md", "sha256": "2c214f6a0baef543e633ed721dd5b4f6eb40e02e92f165f1f1b18925f66da9a5" },
+    { "path": "openspec/changes/github-rank-tui/design.md", "sha256": "50ae8fc85af3c3de879d6ae6cfb45bbff59cddccdb86fd3a2cb2aba893702736" },
+    { "path": "openspec/changes/github-rank-tui/tasks.md", "sha256": "1ea7dc22942c3796f91fa606bb5a030a61ec59f896c1d85728ccda427f67fdbd" },
+    { "path": "openspec/changes/github-rank-tui/specs/repo-fetch/spec.md", "sha256": "8481ba5f7d33c0b198ee6f35c972b9392b60557cdce481d28d91959b5fa66606" },
+    { "path": "openspec/changes/github-rank-tui/specs/repo-ranking/spec.md", "sha256": "6e06eb9adf3b35ff61818489ce3958b1f16a8932c3874378e64aad5889587759" },
+    { "path": "openspec/changes/github-rank-tui/specs/time-window/spec.md", "sha256": "009a8e28e73b048ce0a7a94d3831204ff10294d2ed54bcc8e77da2977bc3169a" },
+    { "path": "openspec/changes/github-rank-tui/specs/topic-filter/spec.md", "sha256": "fc6f6203017500d928ab171b777386ddd0dcca4790b7eaa785ae2b55f531e464" },
+    { "path": "openspec/changes/github-rank-tui/specs/tui-app/spec.md", "sha256": "83a3518dc17e06a2404eb364975ceb84cdf9f68da98ef755c04f01e6138580bd" }
+  ]
+}
