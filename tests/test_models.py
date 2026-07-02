@@ -102,6 +102,18 @@ def test_starsnapshot_parsing() -> None:
 # SearchParams
 # ---------------------------------------------------------------------------
 
+def test_searchparams_date_end_before_date_start() -> None:
+    """SearchParams rejects date_end before date_start."""
+    from gitrank.api.models import SearchParams
+
+    with pytest.raises(ValidationError):
+        SearchParams(
+            topic="rust",
+            date_start=date(2024, 12, 31),
+            date_end=date(2024, 1, 1),
+        )
+
+
 def test_searchparams_valid_defaults() -> None:
     """SearchParams with required fields only — defaults kick in."""
     from gitrank.api.models import SearchParams
@@ -195,3 +207,54 @@ def test_rankedrepo_creation() -> None:
     assert ranked.activity_score == 0.82
     assert ranked.composite_score == 0.85
     assert ranked.growth_per_month == 125.5
+
+
+def test_rankedrepo_rejects_out_of_range_scores() -> None:
+    """RankedRepo score fields must be between 0 and 1 inclusive."""
+    from gitrank.api.models import RankedRepo, Repository
+
+    repo = Repository(
+        id=1,
+        full_name="test/repo",
+        description="A test repo",
+        stargazers_count=100,
+        created_at="2024-01-01T00:00:00Z",
+        updated_at="2025-01-01T00:00:00Z",
+        pushed_at="2025-01-01T00:00:00Z",
+    )
+
+    # stars_score < 0
+    with pytest.raises(ValidationError):
+        RankedRepo(
+            rank=1,
+            repo=repo,
+            stars_score=-0.1,
+            growth_score=0.5,
+            activity_score=0.5,
+            composite_score=0.5,
+            growth_per_month=10.0,
+        )
+
+    # stars_score > 1
+    with pytest.raises(ValidationError):
+        RankedRepo(
+            rank=1,
+            repo=repo,
+            stars_score=1.1,
+            growth_score=0.5,
+            activity_score=0.5,
+            composite_score=0.5,
+            growth_per_month=10.0,
+        )
+
+    # composite_score > 1
+    with pytest.raises(ValidationError):
+        RankedRepo(
+            rank=1,
+            repo=repo,
+            stars_score=0.5,
+            growth_score=0.5,
+            activity_score=1.5,
+            composite_score=0.5,
+            growth_per_month=10.0,
+        )

@@ -21,6 +21,8 @@ class CacheDB:
 
     def initialize(self) -> None:
         """Create tables if they don't exist."""
+        if self.conn is not None:
+            return
         self.conn = sqlite3.connect(self.db_path)
         self.conn.row_factory = sqlite3.Row
         self.conn.execute("PRAGMA journal_mode=WAL")
@@ -194,7 +196,7 @@ class CacheDB:
             full_name=row["full_name"],
             description=row["description"],
             language=row["language"],
-            topics=json.loads(row["topics"]),
+            topics=json.loads(row["topics"] or "[]"),
             stargazers_count=row["stargazers_count"],
             forks_count=row["forks_count"],
             open_issues_count=row["open_issues_count"],

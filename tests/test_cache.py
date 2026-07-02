@@ -1,7 +1,6 @@
 """Tests for gitrank.cache.db -- CacheDB class."""
 
 import json
-import time
 from datetime import date, datetime, timedelta, timezone
 from typing import Optional
 
@@ -248,8 +247,6 @@ def test_cache_hit_returns_true_after_caching(temp_db) -> None:
 
 def test_record_snapshot_records_star_count(temp_db) -> None:
     """record_snapshot() inserts a row into star_history."""
-    snapshot_time = datetime(2025, 7, 1, 12, 0, 0)
-
     temp_db.record_snapshot(github_id=100, stargazers_count=500)
 
     rows = temp_db.conn.execute(
@@ -319,3 +316,33 @@ def test_refresh_repositories_removes_old_entries(temp_db) -> None:
     assert temp_db.get_repository(1) is not None
     # Old repo should be gone
     assert temp_db.get_repository(2) is None
+
+
+# ---------------------------------------------------------------------------
+# 13. cache_hit() returns False for stale cached entries
+# ---------------------------------------------------------------------------
+
+def test_cache_hit_returns_false_for_stale_entries(temp_db) -> None:
+    """cache_hit() returns False when matching repos exist but are stale."""
+    repo = make_repo(
+        github_id=99,
+        full_name="stale/repo",
+        topics=["rust"],
+        created_at=datetime(2024, 7, 1, 10, 0, 0),
+    )
+    temp_db.upsert_repository(repo)
+
+    # Manually set cached_at to 48 hours ago to make it stale
+    stale_time = datetime.now(timezone.utc) - timedelta(hours=48)
+    temp_db.conn.execute(
+        "UPDATE repositories SET cached_at = ? WHERE github_id = ?",
+        (stale_time.isoformat(), 99),
+    )
+    temp_db.conn.commit()
+
+    result = temp_db.cache_hit(
+        topic="rust",
+        date_start=date(2024, 1, 1),
+        date_end=date(2024, 12, 31),
+    )
+    assert result is False

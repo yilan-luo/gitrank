@@ -3,7 +3,7 @@
 from datetime import date, datetime
 from typing import List, Literal, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 
 class Repository(BaseModel):
@@ -40,6 +40,15 @@ class SearchParams(BaseModel):
     date_end: date
     sort: Literal["stars", "composite"] = "stars"
     limit: int = Field(default=20, ge=1, le=100)
+
+    @model_validator(mode="after")
+    def check_date_range(self) -> "SearchParams":
+        """Validate that date_end is not before date_start."""
+        if self.date_end < self.date_start:
+            raise ValueError(
+                f"date_end ({self.date_end}) must be on or after date_start ({self.date_start})"
+            )
+        return self
 
 
 class RankedRepo(BaseModel):
