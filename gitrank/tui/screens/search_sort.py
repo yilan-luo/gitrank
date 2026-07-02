@@ -43,9 +43,9 @@ class SearchSortScreen(Screen):
         app = self.app
         if hasattr(app, "search_state"):
             app.search_state.sort = sort
-        from gitrank.tui.screens.results import ResultsScreen
+        from gitrank.tui.screens.loading import LoadingScreen
 
-        self.app.push_screen(ResultsScreen())
+        self.app.push_screen(LoadingScreen())
 
     def action_pop_screen(self) -> None:
         """Go back to the time window selection screen."""
