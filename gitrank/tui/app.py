@@ -19,8 +19,11 @@ class GitRankApp(App):
 
     def on_mount(self) -> None:
         """Push the main menu screen on startup."""
+        from gitrank.settings import Settings
         from gitrank.tui.screens.main_menu import MainMenuScreen
         from gitrank.tui.state import SearchState
 
+        self.settings = Settings()
+        self.settings.load()
         self.search_state = SearchState()
         self.push_screen(MainMenuScreen())
