@@ -189,3 +189,57 @@ async def test_execute_ranks_by_stars_sort():
     assert result[1].rank == 2
     assert result[2].repo.full_name == "low/repo"
     assert result[2].rank == 3
+
+
+# ---------------------------------------------------------------------------
+# 5. execute() ranks by composite sort
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_execute_ranks_by_composite_sort():
+    """execute() with sort='composite' converts date range to window_days
+    and routes to rank_by_composite, ordering by composite_score descending."""
+    cache = MagicMock(spec=CacheDB)
+    cache.cache_hit.return_value = False
+
+    # Repos with different star counts, recency, etc. to produce distinct
+    # composite scores
+    api_results = [
+        _make_repo_dict(1, "old/repo"),    # 100 stars, created long ago
+        _make_repo_dict(10, "hot/repo"),   # 1000 stars, higher stars_score
+        _make_repo_dict(5, "mid/repo"),    # 500 stars
+    ]
+
+    client = MagicMock()
+    client.adaptive_fetch = AsyncMock(return_value=api_results)
+
+    orchestrator = QueryOrchestrator(cache=cache, client=client)
+
+    # date range = 2024-01-01 to 2024-12-31 → window_days = 365
+    params = _make_params(
+        sort="composite",
+        date_start=date(2024, 1, 1),
+        date_end=date(2024, 12, 31),
+        limit=10,
+    )
+
+    result = await orchestrator.execute(params)
+
+    # Should have called the API
+    client.adaptive_fetch.assert_called_once()
+    # Should return ranked results
+    assert len(result) == 3
+    assert all(isinstance(r, RankedRepo) for r in result)
+    # Verify all composite scores are populated (not just stars)
+    for r in result:
+        assert 0.0 <= r.composite_score <= 1.0
+        assert 0.0 <= r.stars_score <= 1.0
+        assert 0.0 <= r.growth_score <= 1.0
+        assert 0.0 <= r.activity_score <= 1.0
+    # Ranks should be 1-based consecutive
+    ranks = [r.rank for r in result]
+    assert ranks == [1, 2, 3]
+    # Sorted by composite_score descending
+    scores = [r.composite_score for r in result]
+    assert scores == sorted(scores, reverse=True)

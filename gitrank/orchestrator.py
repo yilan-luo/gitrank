@@ -7,13 +7,18 @@ and finally ranks them using the configured sort strategy.
 
 from __future__ import annotations
 
+import logging
 from datetime import datetime, timezone
 from typing import List, Optional
+
+from pydantic import ValidationError
 
 from gitrank.api.client import GitHubClient
 from gitrank.api.models import RankedRepo, Repository, SearchParams
 from gitrank.cache.db import CacheDB
 from gitrank.rank.engine import rank_by_composite, rank_by_stars
+
+logger = logging.getLogger(__name__)
 
 
 class QueryOrchestrator:
@@ -126,9 +131,13 @@ class QueryOrchestrator:
                         archived=item.get("archived", False),
                     )
                 )
-            except Exception:
-                # Skip items that fail validation (e.g. missing required fields)
-                continue
+            except ValidationError:
+                item_id = item.get("id", "<unknown>")
+                logger.warning(
+                    "Skipping repo id=%s due to Pydantic ValidationError",
+                    item_id,
+                    exc_info=True,
+                )
         return models
 
 

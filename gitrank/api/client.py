@@ -34,6 +34,7 @@ class GitHubClient:
         self.token = token
         self.rate_limit_remaining: int | None = None
         self.rate_limit_reset: int | None = None
+        self._http: httpx.AsyncClient | None = None
 
     # ------------------------------------------------------------------
     # Public API
@@ -76,26 +77,23 @@ class GitHubClient:
             "page": page,
         }
 
-        async with httpx.AsyncClient(
-            base_url=GITHUB_API_BASE,
-            headers=self._build_headers(),
-        ) as client:
-            response = await client.get("/search/repositories", params=params)
-            self._update_rate_limit(response.headers)
+        client = await self._get_client()
+        response = await client.get("/search/repositories", params=params)
+        self._update_rate_limit(response.headers)
 
-            if response.status_code == 403:
-                reset_ts = self.rate_limit_reset
-                reset_info = (
-                    f" Resets at: {datetime.fromtimestamp(reset_ts)}"
-                    if reset_ts
-                    else ""
-                )
-                raise RuntimeError(
-                    f"GitHub API rate limit exceeded.{reset_info}"
-                )
+        if response.status_code == 403:
+            reset_ts = self.rate_limit_reset
+            reset_info = (
+                f" Resets at: {datetime.fromtimestamp(reset_ts)}"
+                if reset_ts
+                else ""
+            )
+            raise RuntimeError(
+                f"GitHub API rate limit exceeded.{reset_info}"
+            )
 
-            response.raise_for_status()
-            return response.json()
+        response.raise_for_status()
+        return response.json()
 
     async def adaptive_fetch(
         self,
@@ -186,6 +184,26 @@ class GitHubClient:
             self.rate_limit_remaining = int(remaining)
         if reset is not None:
             self.rate_limit_reset = int(reset)
+
+    async def _get_client(self) -> httpx.AsyncClient:
+        """Return the shared ``httpx.AsyncClient``, creating it lazily.
+
+        The client is reused across all ``search_repos`` calls so a single
+        HTTP connection pool serves the entire lifetime of the
+        ``GitHubClient`` instance.
+        """
+        if self._http is None:
+            self._http = httpx.AsyncClient(
+                base_url=GITHUB_API_BASE,
+                headers=self._build_headers(),
+            )
+        return self._http
+
+    async def close(self) -> None:
+        """Close the underlying HTTP client and release connections."""
+        if self._http is not None:
+            await self._http.aclose()
+            self._http = None
 
     def _should_throttle(self) -> bool:
         """Return ``True`` when the rate-limit is low and we should slow down.

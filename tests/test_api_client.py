@@ -214,11 +214,13 @@ async def test_adaptive_fetch_stops_at_max_depth() -> None:
 
     async def _mock_search(topic: str, date_start: str, date_end: str, page: int = 1) -> dict:
         call_args.append((topic, date_start, date_end, page))
-        # Always return total > 1000 — would split if depth allowed it
+        # Return page-dependent ids so the pagination loop exercises real
+        # behaviour (distinct items per page rather than repeated 1-100)
+        start_id = (page - 1) * 100 + 1
         return {
             "total_count": 2000,
             "incomplete_results": False,
-            "items": [_make_item(i) for i in range(1, 101)],
+            "items": [_make_item(i) for i in range(start_id, start_id + 100)],
         }
 
     client.search_repos = AsyncMock(side_effect=_mock_search)  # type: ignore[method-assign]
