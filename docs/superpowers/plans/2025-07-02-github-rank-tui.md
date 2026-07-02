@@ -2,6 +2,7 @@
 change: github-rank-tui
 design-doc: docs/superpowers/specs/2025-07-02-github-rank-tui-design.md
 base-ref: 3cc02b7f9735eee68cc58d7eb79cde674197845c
+archived-with: 2026-07-02-github-rank-tui
 ---
 
 # github-rank-tui 实施计划

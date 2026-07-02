@@ -2,6 +2,8 @@
 comet_change: github-rank-tui
 role: technical-design
 canonical_spec: openspec
+archived-with: 2026-07-02-github-rank-tui
+status: final
 ---
 
 # github-rank-tui 技术设计
