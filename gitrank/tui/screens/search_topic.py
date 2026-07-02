@@ -1,12 +1,64 @@
-"""Placeholder: Search topic screen (coming soon)."""
+"""Search topic selection screen — Step 1 of the search wizard."""
 
 from textual.app import ComposeResult
 from textual.screen import Screen
-from textual.widgets import Static
+from textual.widgets import Header, Footer, ListView, ListItem, Static, Input
 
 
 class SearchTopicScreen(Screen):
-    """Search topic input screen (placeholder)."""
+    """Step 1: Select a topic from presets or enter a custom one."""
+
+    BINDINGS = [
+        ("enter", "select", "Select"),
+        ("escape", "pop_screen", "Back"),
+    ]
 
     def compose(self) -> ComposeResult:
-        yield Static("Search Topic - Coming Soon")
+        yield Header()
+        yield Static("Step 1: Select a Topic", classes="title")
+        yield ListView(
+            ListItem(Static("ai")),
+            ListItem(Static("machine-learning")),
+            ListItem(Static("web")),
+            ListItem(Static("mobile")),
+            ListItem(Static("devops")),
+            ListItem(Static("game")),
+            ListItem(Static("rust")),
+            ListItem(Static("python")),
+            ListItem(Static("javascript")),
+            ListItem(Static("golang")),
+            ListItem(Static("data-science")),
+            ListItem(Static("security")),
+        )
+        yield Static("Or enter a custom topic:")
+        yield Input(placeholder="e.g. blockchain, cli, visualization...", id="custom_topic")
+        yield Footer()
+
+    def on_list_view_selected(self, event: ListView.Selected) -> None:
+        """Handle Enter on a preset topic item."""
+        item = event.item
+        if item is not None:
+            for child in getattr(item, "_pending_children", []):
+                if isinstance(child, Static):
+                    topic = getattr(child, "_Static__content", None)
+                    if topic:
+                        self._navigate_with_topic(str(topic))
+                        return
+
+    def on_input_submitted(self, event: Input.Submitted) -> None:
+        """Handle Enter in the custom topic Input."""
+        if event.input.id == "custom_topic" and event.value.strip():
+            self._navigate_with_topic(event.value.strip())
+
+    def _navigate_with_topic(self, topic: str) -> None:
+        """Store the topic in SearchState and advance to Step 2."""
+        app = self.app
+        if hasattr(app, "search_state"):
+            app.search_state.topic = topic
+        from gitrank.tui.screens.search_time import SearchTimeScreen
+
+        self.app.push_screen(SearchTimeScreen())
+
+    def action_pop_screen(self) -> None:
+        """Go back to the main menu."""
+        self.app.pop_screen()
