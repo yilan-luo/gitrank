@@ -19,6 +19,18 @@ class SearchTimeScreen(Screen):
 
     TIME_WINDOWS: list[str] = PRESET_TIME_WINDOWS
 
+    def on_mount(self) -> None:
+        """Pre-highlight the time window from saved settings."""
+        app = self.app
+        if hasattr(app, "search_state"):
+            tw = app.search_state.time_window
+            if tw and tw != "custom":
+                try:
+                    idx = self.TIME_WINDOWS.index(tw)
+                    self.query_one(ListView).index = idx
+                except ValueError:
+                    pass
+
     def compose(self) -> ComposeResult:
         yield Header()
         yield Static("Step 2: Select Time Window", classes="title")

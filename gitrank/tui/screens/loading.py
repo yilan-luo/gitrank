@@ -29,8 +29,8 @@ class LoadingScreen(Screen):
 
     def compose(self) -> ComposeResult:
         yield Header()
-        yield Static("Searching GitHub...", id="status")
-        yield ProgressBar(show_eta=False)
+        yield Static("Preparing search...", id="status")
+        yield ProgressBar(show_eta=False, id="progress_bar")
 
     def on_mount(self) -> None:
         """Kick off the background search worker."""
@@ -61,20 +61,46 @@ class LoadingScreen(Screen):
                 cache.initialize()
             client = getattr(app, "github_client", None) or GitHubClient()
 
+            # Show cache-hit or API-fetch text
+            topic_filter = state.topic.strip() if state.topic else None
+            if cache.cache_hit(
+                topic=topic_filter,
+                date_start=date_start,
+                date_end=date_end,
+            ):
+                self.query_one("#status", Static).update("Loading from cache...")
+            else:
+                self.query_one("#status", Static).update(
+                    "Fetching from GitHub API..."
+                )
+
             orchestrator = QueryOrchestrator(cache=cache, client=client)
             results = await orchestrator.execute(params)
 
-            if self._is_active():
+            if self._is_active() and results:
                 from gitrank.tui.screens.results import ResultsScreen
 
                 self.app.pop_screen()
                 self.app.push_screen(ResultsScreen(results))
+            elif self._is_active():
+                self.query_one("#status", Static).update(
+                    "No results found. Press Esc to go back."
+                )
 
         except (httpx.HTTPError, ValueError, ConnectionError, OSError) as exc:
+            err_msg = str(exc)
             if self._is_active():
-                self.query_one("#status", Static).update(
-                    f"Error: {exc}. Press Esc to go back."
-                )
+                self.query_one("#progress_bar", ProgressBar).bar_width = 0
+                if "rate limit" in err_msg.lower() or "403" in err_msg:
+                    self.query_one("#status", Static).update(
+                        f"GitHub API rate limit exceeded. "
+                        f"Please wait or set GITHUB_TOKEN.\n"
+                        f"Press Esc to go back."
+                    )
+                else:
+                    self.query_one("#status", Static).update(
+                        f"Error: {err_msg}. Press Esc to go back."
+                    )
 
     # ------------------------------------------------------------------
     # Helpers
@@ -89,6 +115,8 @@ class LoadingScreen(Screen):
             return today - timedelta(days=30), today
         elif time_window == "last_3_months":
             return today - timedelta(days=90), today
+        elif time_window == "last_6_months":
+            return today - timedelta(days=180), today
         elif time_window == "last_year":
             return today - timedelta(days=365), today
         elif time_window == "custom":

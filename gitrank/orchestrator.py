@@ -61,8 +61,11 @@ class QueryOrchestrator:
         """
         repos: List[Repository] = []
 
+        # Treat empty string topic as "no filter" (None)
+        topic_filter = params.topic.strip() if params.topic else None
+
         if not force_refresh and self.cache.cache_hit(
-            topic=params.topic,
+            topic=topic_filter,
             date_start=params.date_start,
             date_end=params.date_end,
         ):
@@ -70,27 +73,45 @@ class QueryOrchestrator:
             repos = self.cache.get_repositories_by_date(
                 date_start=params.date_start,
                 date_end=params.date_end,
-                topic=params.topic,
+                topic=topic_filter,
             )
         else:
             # Cache miss (or forced refresh) — hit the GitHub API
             date_start_str = params.date_start.isoformat()
             date_end_str = params.date_end.isoformat()
             raw_items = await self.client.adaptive_fetch(
-                topic=params.topic,
+                topic=topic_filter,
                 date_start=date_start_str,
                 date_end=date_end_str,
             )
             repos = self._to_repository_models(raw_items)
 
-            # Persist every fetched repo into the cache
+            # Persist every fetched repo into the cache and record star snapshots
             for repo in repos:
                 self.cache.upsert_repository(repo)
+                self.cache.record_snapshot(
+                    github_id=repo.id,
+                    stargazers_count=repo.stargazers_count,
+                )
+
+        # Build star_history dict for composite ranking: repo_id -> [star_count, ...]
+        star_history: dict[int, list[int]] = {}
+        for repo in repos:
+            snapshots = self.cache.get_snapshots(repo.id)
+            if snapshots and len(snapshots) >= 1:
+                star_history[repo.id] = [
+                    s.stargazers_count for s in snapshots
+                ]
 
         # Rank using the requested strategy
         if params.sort == "composite":
             window_days = (params.date_end - params.date_start).days or 365
-            return rank_by_composite(repos, window_days=window_days, limit=params.limit)
+            return rank_by_composite(
+                repos,
+                window_days=window_days,
+                star_history=star_history if star_history else None,
+                limit=params.limit,
+            )
         else:
             return rank_by_stars(repos, limit=params.limit)
 

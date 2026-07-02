@@ -1,6 +1,7 @@
 """gitrank -- GitHub repository ranking TUI tool."""
 
 import os
+import re
 from datetime import date
 from typing import Optional
 
@@ -24,7 +25,7 @@ def validate_date(value: str) -> date:
 def main(
     topic: Optional[str] = typer.Option(None, "--topic", help="Search topic (e.g., ai, rust, python)"),
     since: Optional[str] = typer.Option(None, "--since", help="Start date (YYYY-MM-DD)"),
-    range: Optional[str] = typer.Option(None, "--range", help="Time range: all, month, 3months, year"),
+    range: Optional[str] = typer.Option(None, "--range", help="Time range: label (all,month,3months,6months,year) or YYYY-MM-DD..YYYY-MM-DD"),
     sort: Optional[str] = typer.Option(None, "--sort", help="Sort method: stars or composite"),
     limit: Optional[int] = typer.Option(None, "--limit", help="Max results (1-100)"),
     refresh: bool = typer.Option(False, "--refresh", help="Force refresh, bypass cache"),
@@ -45,14 +46,30 @@ def main(
 
     if topic:
         # CLI direct mode: run search and display results
-        if not since:
-            since_val = "2008-01-01"  # GitHub was founded in 2008
-        else:
+
+        # Parse --range: support labels AND YYYY-MM-DD..YYYY-MM-DD format
+        if range:
+            range_pattern = r"^(\d{4}-\d{2}-\d{2})\.\.(\d{4}-\d{2}-\d{2})$"
+            m = re.match(range_pattern, range)
+            if m:
+                since_val = m.group(1)
+                until = m.group(2)
+                validate_date(since_val)
+                validate_date(until)
+            else:
+                since_val = since or "2008-01-01"
+                until = date.today().isoformat()
+        elif since:
             since_val = since
-        if not range:
-            range_val = "all"
+            validate_date(since_val)
+            until = date.today().isoformat()
         else:
-            range_val = range
+            # Default: last 6 months
+            from datetime import timedelta
+            default_start = date.today() - timedelta(days=180)
+            since_val = default_start.isoformat()
+            until = date.today().isoformat()
+
         if not sort:
             sort_val = "stars"
         else:
@@ -62,12 +79,9 @@ def main(
         else:
             limit_val = limit
 
-        validate_date(since_val)
-        until = date.today().isoformat()
-
         typer.echo(
             f"Searching: topic={topic}, since={since_val}, "
-            f"range={range_val}, sort={sort_val}, limit={limit_val}, until={until}"
+            f"until={until}, sort={sort_val}, limit={limit_val}"
         )
         # TODO: CLI direct mode will be wired when TUI async integration is done
         typer.echo("CLI direct mode is ready. Use interactive TUI for full experience.")

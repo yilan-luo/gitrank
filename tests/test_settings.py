@@ -108,4 +108,4 @@ def test_get_defaults_returns_default_dict(temp_config_dir):
 
     assert defaults == DEFAULT_CONFIG
     assert defaults is not DEFAULT_CONFIG  # should be a copy, not the same object
-    assert defaults["topic"] == "ai"
+    assert defaults["topic"] == ""

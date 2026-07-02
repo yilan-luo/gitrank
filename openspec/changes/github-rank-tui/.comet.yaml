@@ -7,16 +7,17 @@ subagent_dispatch: confirmed
 tdd_mode: tdd
 review_mode: thorough
 isolation: branch
-verify_mode: null
+verify_mode: full
 auto_transition: true
 base_ref: null
 design_doc: docs/superpowers/specs/2025-07-02-github-rank-tui-design.md
 plan: docs/superpowers/plans/2025-07-02-github-rank-tui.md
-verify_result: pending
-verification_report: null
+verify_result: fail
+verification_report: docs/superpowers/reports/2025-07-02-github-rank-tui-verify.md
 branch_status: pending
 created_at: 2026-07-02
 verified_at: null
 archived: false
+build_command: pytest tests/ -q
 handoff_context: openspec/changes/github-rank-tui/.comet/handoff/design-context.json
 handoff_hash: bf50be1938946d9cf4186057f1e4513978af50f2ceed8b71a4ddd90a67a030f9

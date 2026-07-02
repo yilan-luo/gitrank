@@ -19,6 +19,16 @@ class SearchSortScreen(Screen):
 
     SORT_OPTIONS: list[str] = SORT_OPTIONS
 
+    def on_mount(self) -> None:
+        """Pre-highlight the sort method from saved settings."""
+        app = self.app
+        if hasattr(app, "search_state") and app.search_state.sort:
+            try:
+                idx = self.SORT_OPTIONS.index(app.search_state.sort)
+                self.query_one(ListView).index = idx
+            except ValueError:
+                pass
+
     def compose(self) -> ComposeResult:
         yield Header()
         yield Static("Step 3: Select Sort Method", classes="title")

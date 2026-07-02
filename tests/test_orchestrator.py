@@ -57,6 +57,8 @@ async def test_execute_returns_cached_results_when_cache_hits():
     """execute() loads from cache without calling the API when cache_hit is True."""
     cache = MagicMock(spec=CacheDB)
     cache.cache_hit.return_value = True
+    cache.get_snapshots.return_value = []
+    cache.record_snapshot = MagicMock()
 
     now = datetime(2024, 3, 15, 10, 30, 0, tzinfo=timezone.utc)
     cached_repo = Repository(
@@ -100,6 +102,8 @@ async def test_execute_fetches_from_api_when_cache_misses():
     cache = MagicMock(spec=CacheDB)
     cache.cache_hit.return_value = False
     cache.get_repositories_by_date.return_value = []
+    cache.get_snapshots.return_value = []
+    cache.record_snapshot = MagicMock()
 
     api_results = [
         _make_repo_dict(1, "api/repo1"),
@@ -137,6 +141,8 @@ async def test_execute_respects_force_refresh():
     cache = MagicMock(spec=CacheDB)
     cache.cache_hit.return_value = True
     cache.get_repositories_by_date.return_value = []
+    cache.get_snapshots.return_value = []
+    cache.record_snapshot = MagicMock()
 
     api_results = [_make_repo_dict(1, "fresh/repo")]
 
@@ -167,6 +173,8 @@ async def test_execute_ranks_by_stars_sort():
     """execute() with sort='stars' returns repos ordered by stars descending."""
     cache = MagicMock(spec=CacheDB)
     cache.cache_hit.return_value = False
+    cache.get_snapshots.return_value = []
+    cache.record_snapshot = MagicMock()
 
     api_results = [
         _make_repo_dict(1, "low/repo"),     # 100 stars
@@ -202,6 +210,8 @@ async def test_execute_ranks_by_composite_sort():
     and routes to rank_by_composite, ordering by composite_score descending."""
     cache = MagicMock(spec=CacheDB)
     cache.cache_hit.return_value = False
+    cache.get_snapshots.return_value = []
+    cache.record_snapshot = MagicMock()
 
     # Repos with different star counts, recency, etc. to produce distinct
     # composite scores

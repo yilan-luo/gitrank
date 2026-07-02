@@ -37,6 +37,15 @@ class MainMenuScreen(Screen):
         if action == "search":
             from gitrank.tui.screens.search_topic import SearchTopicScreen
 
+            # Pre-fill search state from saved settings
+            settings = self.app.settings
+            settings_data = settings.data if settings.data else {}
+            self.app.search_state.topic = settings_data.get("topic", "")
+            self.app.search_state.time_window = settings_data.get(
+                "time_window", "last_6_months"
+            )
+            self.app.search_state.sort = settings_data.get("sort", "stars")
+
             self.app.push_screen(SearchTopicScreen())
         elif action == "settings":
             from gitrank.tui.screens.settings import SettingsScreen

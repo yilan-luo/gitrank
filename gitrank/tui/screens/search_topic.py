@@ -19,10 +19,27 @@ class SearchTopicScreen(Screen):
 
     PRESET_TOPICS: list[str] = PRESET_TOPICS
 
+    def on_mount(self) -> None:
+        """Pre-highlight the topic from saved settings if set."""
+        app = self.app
+        if hasattr(app, "search_state") and app.search_state.topic:
+            topic = app.search_state.topic
+            try:
+                # +1 to skip "All Topics" at index 0
+                idx = self.PRESET_TOPICS.index(topic) + 1
+                self.query_one(ListView).index = idx
+            except ValueError:
+                # Custom topic — pre-fill the input field
+                self.query_one("#custom_topic", Input).value = topic
+        else:
+            # No topic set — highlight "All Topics"
+            self.query_one(ListView).index = 0
+
     def compose(self) -> ComposeResult:
         yield Header()
         yield Static("Step 1: Select a Topic", classes="title")
         yield ListView(
+            ListItem(Static("All Topics")),
             *[ListItem(Static(topic)) for topic in self.PRESET_TOPICS],
         )
         yield Static("Or enter a custom topic:")
@@ -31,8 +48,11 @@ class SearchTopicScreen(Screen):
 
     def on_list_view_selected(self, event: ListView.Selected) -> None:
         """Handle Enter on a preset topic item."""
-        if event.item_index < len(self.PRESET_TOPICS):
-            topic = self.PRESET_TOPICS[event.item_index]
+        if event.item_index == 0:
+            # "All Topics" — no topic filter
+            self._navigate_with_topic("")
+        elif event.item_index - 1 < len(self.PRESET_TOPICS):
+            topic = self.PRESET_TOPICS[event.item_index - 1]
             self._navigate_with_topic(topic)
 
     def on_input_submitted(self, event: Input.Submitted) -> None:

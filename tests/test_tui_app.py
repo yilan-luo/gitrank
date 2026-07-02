@@ -14,7 +14,7 @@ class TestSearchState:
         """SearchState has correct default values."""
         state = SearchState()
         assert state.topic == ""
-        assert state.time_window == "all"
+        assert state.time_window == "last_6_months"
         assert state.custom_since is None
         assert state.custom_until is None
         assert state.sort == "stars"

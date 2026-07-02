@@ -11,8 +11,8 @@ from pathlib import Path
 from typing import Optional
 
 DEFAULT_CONFIG = {
-    "topic": "ai",
-    "time_window": "all",
+    "topic": "",
+    "time_window": "last_6_months",
     "sort": "stars",
     "limit": 20,
 }

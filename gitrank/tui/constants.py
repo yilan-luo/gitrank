@@ -22,10 +22,11 @@ PRESET_TOPICS: list[str] = [
 ]
 
 PRESET_TIME_WINDOWS: list[str] = [
-    "all",
-    "last_month",
+    "last_6_months",
     "last_3_months",
+    "last_month",
     "last_year",
+    "all",
     "custom",
 ]
 
@@ -35,10 +36,11 @@ SORT_OPTIONS: list[str] = [
 ]
 
 TIME_WINDOW_LABELS: dict[str, str] = {
-    "all": "All Time",
-    "last_month": "Last Month",
+    "last_6_months": "Last 6 Months (default)",
     "last_3_months": "Last 3 Months",
+    "last_month": "Last Month",
     "last_year": "Last Year",
+    "all": "All Time",
     "custom": "Custom",
 }
 
