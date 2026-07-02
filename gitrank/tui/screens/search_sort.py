@@ -4,6 +4,8 @@ from textual.app import ComposeResult
 from textual.screen import Screen
 from textual.widgets import Header, Footer, ListView, ListItem, Static
 
+from gitrank.tui.constants import SORT_OPTIONS, SORT_LABELS
+
 
 class SearchSortScreen(Screen):
     """Step 3: Select sort method (Stars or Composite)."""
@@ -13,33 +15,24 @@ class SearchSortScreen(Screen):
         ("escape", "pop_screen", "Back"),
     ]
 
+    SORT_OPTIONS: list[str] = SORT_OPTIONS
+
     def compose(self) -> ComposeResult:
         yield Header()
         yield Static("Step 3: Select Sort Method", classes="title")
         yield ListView(
-            ListItem(Static("Stars")),
-            ListItem(Static("Composite")),
+            *[ListItem(Static(SORT_LABELS[opt])) for opt in self.SORT_OPTIONS],
         )
         yield Footer()
 
     def on_list_view_selected(self, event: ListView.Selected) -> None:
         """Handle Enter on a sort option."""
-        item = event.item
-        if item is not None:
-            for child in getattr(item, "_pending_children", []):
-                if isinstance(child, Static):
-                    label = getattr(child, "_Static__content", None)
-                    if label:
-                        self._navigate_with_sort(str(label))
-                        return
+        if event.item_index < len(self.SORT_OPTIONS):
+            sort = self.SORT_OPTIONS[event.item_index]
+            self._navigate_with_sort(sort)
 
-    def _navigate_with_sort(self, label: str) -> None:
+    def _navigate_with_sort(self, sort: str) -> None:
         """Store the sort method in SearchState and trigger the search."""
-        sort_map = {
-            "Stars": "stars",
-            "Composite": "composite",
-        }
-        sort = sort_map.get(label, "stars")
         app = self.app
         if hasattr(app, "search_state"):
             app.search_state.sort = sort

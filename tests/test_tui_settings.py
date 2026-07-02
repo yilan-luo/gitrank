@@ -51,6 +51,17 @@ def _get_static_labels_from_items(items):
     return labels
 
 
+def _get_binding_map(screen):
+    """Return {action: key} mapping handling both tuple and Binding formats."""
+    result = {}
+    for b in screen.BINDINGS:
+        if isinstance(b, tuple):
+            result[b[1]] = b[0]
+        else:
+            result[b.action] = b.key
+    return result
+
+
 # ---------------------------------------------------------------------------
 # 1. test_settings_screen_displays_current_values
 # ---------------------------------------------------------------------------
@@ -145,17 +156,17 @@ def test_save_updates_settings() -> None:
 def test_settings_screen_has_escape_binding() -> None:
     """SettingsScreen has an escape binding that maps to pop_screen."""
     screen = SettingsScreen()
-    bindings = {b[0]: b[1] for b in screen.BINDINGS}
-    assert "escape" in bindings, "Expected 'escape' key binding"
-    assert bindings["escape"] == "pop_screen"
+    bindings = _get_binding_map(screen)
+    assert "pop_screen" in bindings, "Expected 'pop_screen' action"
+    assert bindings["pop_screen"] == "escape"
 
 
 def test_topic_picker_has_escape_binding() -> None:
     """_TopicPickerScreen has an escape binding for back navigation."""
     screen = _TopicPickerScreen()
-    bindings = {b[0]: b[1] for b in screen.BINDINGS}
-    assert "escape" in bindings
-    assert bindings["escape"] == "pop_screen"
+    bindings = _get_binding_map(screen)
+    assert "pop_screen" in bindings
+    assert bindings["pop_screen"] == "escape"
 
 
 def test_time_picker_screen_exists() -> None:

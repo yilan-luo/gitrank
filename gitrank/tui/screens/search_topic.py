@@ -4,6 +4,8 @@ from textual.app import ComposeResult
 from textual.screen import Screen
 from textual.widgets import Header, Footer, ListView, ListItem, Static, Input
 
+from gitrank.tui.constants import PRESET_TOPICS
+
 
 class SearchTopicScreen(Screen):
     """Step 1: Select a topic from presets or enter a custom one."""
@@ -13,22 +15,13 @@ class SearchTopicScreen(Screen):
         ("escape", "pop_screen", "Back"),
     ]
 
+    PRESET_TOPICS: list[str] = PRESET_TOPICS
+
     def compose(self) -> ComposeResult:
         yield Header()
         yield Static("Step 1: Select a Topic", classes="title")
         yield ListView(
-            ListItem(Static("ai")),
-            ListItem(Static("machine-learning")),
-            ListItem(Static("web")),
-            ListItem(Static("mobile")),
-            ListItem(Static("devops")),
-            ListItem(Static("game")),
-            ListItem(Static("rust")),
-            ListItem(Static("python")),
-            ListItem(Static("javascript")),
-            ListItem(Static("golang")),
-            ListItem(Static("data-science")),
-            ListItem(Static("security")),
+            *[ListItem(Static(topic)) for topic in self.PRESET_TOPICS],
         )
         yield Static("Or enter a custom topic:")
         yield Input(placeholder="e.g. blockchain, cli, visualization...", id="custom_topic")
@@ -36,14 +29,9 @@ class SearchTopicScreen(Screen):
 
     def on_list_view_selected(self, event: ListView.Selected) -> None:
         """Handle Enter on a preset topic item."""
-        item = event.item
-        if item is not None:
-            for child in getattr(item, "_pending_children", []):
-                if isinstance(child, Static):
-                    topic = getattr(child, "_Static__content", None)
-                    if topic:
-                        self._navigate_with_topic(str(topic))
-                        return
+        if event.item_index < len(self.PRESET_TOPICS):
+            topic = self.PRESET_TOPICS[event.item_index]
+            self._navigate_with_topic(topic)
 
     def on_input_submitted(self, event: Input.Submitted) -> None:
         """Handle Enter in the custom topic Input."""

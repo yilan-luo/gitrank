@@ -5,6 +5,13 @@ from textual.screen import Screen
 from textual.widgets import Header, Footer, ListView, ListItem, Static
 
 from gitrank.settings import Settings
+from gitrank.tui.constants import (
+    PRESET_TOPICS,
+    PRESET_TIME_WINDOWS,
+    SORT_OPTIONS,
+    TIME_WINDOW_LABELS,
+    SORT_LABELS,
+)
 
 
 # ---------------------------------------------------------------------------
@@ -19,18 +26,7 @@ class _TopicPickerScreen(Screen):
         ("escape", "pop_screen", "Back"),
     ]
 
-    TOPICS = [
-        "ai",
-        "machine-learning",
-        "python",
-        "javascript",
-        "rust",
-        "go",
-        "react",
-        "vue",
-        "java",
-        "typescript",
-    ]
+    TOPICS: list[str] = PRESET_TOPICS
 
     def compose(self) -> ComposeResult:
         yield Header()
@@ -55,11 +51,9 @@ class _TimePickerScreen(Screen):
         ("escape", "pop_screen", "Back"),
     ]
 
-    TIME_OPTIONS = {
-        "all": "All Time",
-        "last_month": "Last Month",
-        "last_3_months": "Last 3 Months",
-        "last_year": "Last Year",
+    # Exclude "custom" — it does not make sense as a persistent default.
+    TIME_OPTIONS: dict[str, str] = {
+        k: TIME_WINDOW_LABELS[k] for k in PRESET_TIME_WINDOWS if k != "custom"
     }
 
     def compose(self) -> ComposeResult:
@@ -85,10 +79,7 @@ class _SortPickerScreen(Screen):
         ("escape", "pop_screen", "Back"),
     ]
 
-    SORT_OPTIONS = {
-        "stars": "Stars",
-        "composite": "Composite",
-    }
+    SORT_OPTIONS: dict[str, str] = {k: SORT_LABELS[k] for k in SORT_OPTIONS}
 
     def compose(self) -> ComposeResult:
         yield Header()

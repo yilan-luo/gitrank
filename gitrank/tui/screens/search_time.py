@@ -4,6 +4,8 @@ from textual.app import ComposeResult
 from textual.screen import Screen
 from textual.widgets import Header, Footer, ListView, ListItem, Static, Input
 
+from gitrank.tui.constants import PRESET_TIME_WINDOWS, TIME_WINDOW_LABELS
+
 
 class SearchTimeScreen(Screen):
     """Step 2: Select a time window for the search."""
@@ -13,15 +15,13 @@ class SearchTimeScreen(Screen):
         ("escape", "pop_screen", "Back"),
     ]
 
+    TIME_WINDOWS: list[str] = PRESET_TIME_WINDOWS
+
     def compose(self) -> ComposeResult:
         yield Header()
         yield Static("Step 2: Select Time Window", classes="title")
         yield ListView(
-            ListItem(Static("All Time")),
-            ListItem(Static("Last Month")),
-            ListItem(Static("Last 3 Months")),
-            ListItem(Static("Last Year")),
-            ListItem(Static("Custom")),
+            *[ListItem(Static(TIME_WINDOW_LABELS[tw])) for tw in self.TIME_WINDOWS],
         )
         yield Static("Custom date range (YYYY-MM-DD):")
         yield Input(placeholder="Since (YYYY-MM-DD)", id="since_input")
@@ -30,25 +30,16 @@ class SearchTimeScreen(Screen):
 
     def on_list_view_selected(self, event: ListView.Selected) -> None:
         """Handle Enter on a time window option."""
-        item = event.item
-        if item is not None:
-            for child in getattr(item, "_pending_children", []):
-                if isinstance(child, Static):
-                    label = getattr(child, "_Static__content", None)
-                    if label:
-                        self._navigate_with_time(str(label))
-                        return
+        if event.item_index < len(self.TIME_WINDOWS):
+            time_window = self.TIME_WINDOWS[event.item_index]
+            self._navigate_with_time(time_window)
 
-    def _navigate_with_time(self, label: str) -> None:
+    def on_input_submitted(self, event: Input.Submitted) -> None:
+        """Handle date input submission (read when Custom is selected)."""
+        pass  # Values are read from the Input widgets when navigating
+
+    def _navigate_with_time(self, time_window: str) -> None:
         """Store the time window in SearchState and advance to Step 3."""
-        time_map = {
-            "All Time": "all",
-            "Last Month": "last_month",
-            "Last 3 Months": "last_3_months",
-            "Last Year": "last_year",
-            "Custom": "custom",
-        }
-        time_window = time_map.get(label, "all")
         app = self.app
         if hasattr(app, "search_state"):
             app.search_state.time_window = time_window
