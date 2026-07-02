@@ -13,6 +13,8 @@ from gitrank.api.models import SearchParams
 from gitrank.cache.db import CacheDB
 from gitrank.orchestrator import QueryOrchestrator
 
+import httpx
+
 
 class LoadingScreen(Screen):
     """Loading screen shown while the GitHub search is in progress.
@@ -55,6 +57,8 @@ class LoadingScreen(Screen):
             )
 
             cache = getattr(app, "cache_db", None) or CacheDB()
+            if cache.conn is None:
+                cache.initialize()
             client = getattr(app, "github_client", None) or GitHubClient()
 
             orchestrator = QueryOrchestrator(cache=cache, client=client)
@@ -66,7 +70,7 @@ class LoadingScreen(Screen):
                 self.app.pop_screen()
                 self.app.push_screen(ResultsScreen(results))
 
-        except Exception as exc:
+        except (httpx.HTTPError, ValueError, ConnectionError, OSError) as exc:
             if self._is_active():
                 self.query_one("#status", Static).update(
                     f"Error: {exc}. Press Esc to go back."
